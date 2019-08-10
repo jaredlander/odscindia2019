@@ -87,3 +87,48 @@ man_y_test <- man_prepped %>%
     bake(all_outcomes(),
          new_data=man_test,
          composition='matrix')
+
+library(glmnet)
+
+mod2 <- glmnet(x=man_x_train, y=man_y_train,
+               family='gaussian', alpha=1,
+               standardize=FALSE)
+plot(mod2, xvar='lambda')
+plot(mod2, xvar='lambda', label=TRUE)
+
+coefpath(mod2)
+
+mod3 <- cv.glmnet(x=man_x_train, y=man_y_train,
+                  family='gaussian', alpha=1,
+                  standardize=FALSE,
+                  nfolds=5)
+plot(mod3)
+mod3$lambda.min
+mod3$lambda.1se
+
+coefpath(mod3)
+coefplot(mod3, sort='magnitude', lambda='lambda.min',
+         intercept=FALSE)
+coefplot(mod3, sort='magnitude', lambda='lambda.1se',
+         intercept=FALSE)
+coefplot(mod3, sort='magnitude', lambda='lambda.1se',
+         intercept=FALSE) + 
+    xlim(-0.01, 0.01)
+
+
+mod4 <- cv.glmnet(x=man_x_train, y=man_y_train,
+                  family='gaussian', alpha=0,
+                  standardize=FALSE,
+                  nfolds=5)
+
+coefpath(mod4)
+
+sd(man_train$BldgArea)
+coefplot(mod3, sort='magnitude', lambda='lambda.1se',
+         intercept=FALSE, plot=FALSE)
+sd(man_train$BldgArea)
+2^.43
+sd(man_train$BldgArea) * 2^.43
+
+preds3 <- predict(mod3, newx=man_x_test, s='lambda.1se')
+head(2^preds3)
