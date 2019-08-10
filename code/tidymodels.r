@@ -132,3 +132,57 @@ sd(man_train$BldgArea) * 2^.43
 
 preds3 <- predict(mod3, newx=man_x_test, s='lambda.1se')
 head(2^preds3)
+
+set.seed(19723)
+sample(10)
+sample(10)
+
+
+library(xgboost)
+
+xg_train <- xgb.DMatrix(
+    data=man_x_train,
+    label=man_y_train
+)
+# you shouldn't do this, but we will for time
+xg_val <- xgb.DMatrix(
+    data=man_x_test,
+    label=man_y_test
+)
+
+xg_train
+
+mod5 <- xgb.train(
+    data=xg_train,
+    nrounds=1
+)
+mod5
+
+mod5 %>% 
+    xgb.plot.multi.trees()
+
+mod6 <- xgb.train(
+    data=xg_train,
+    nrounds=1,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val)
+)
+
+sqrt(mod3$cvm[which(mod3$lambda == mod3$lambda.min)])
+
+mod7 <- xgb.train(
+    data=xg_train,
+    nrounds=100,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val)
+)
+
+mod8 <- xgb.train(
+    data=xg_train,
+    nrounds=500,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val)
+)
+
+mod8$evaluation_log %>% 
+    dygraphs::dygraph()
