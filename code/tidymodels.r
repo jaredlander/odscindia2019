@@ -186,3 +186,71 @@ mod8 <- xgb.train(
 
 mod8$evaluation_log %>% 
     dygraphs::dygraph()
+mod8$evaluation_log %>% 
+    .[validate_rmse == min(validate_rmse)]
+
+mod9 <- xgb.train(
+    data=xg_train,
+    nrounds=16,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val)
+)
+
+mod10 <- xgb.train(
+    data=xg_train,
+    nrounds=500,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val),
+    early_stopping_rounds=70
+)
+
+?xgb.train
+
+mod11 <- xgb.train(
+    data=xg_train,
+    nrounds=500,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val),
+    early_stopping_rounds=70,
+    max_depth=3
+)
+
+mod12 <- xgb.train(
+    data=xg_train,
+    nrounds=500,
+    eval_metric='rmse',
+    watchlist=list(train=xg_train, validate=xg_val),
+    early_stopping_rounds=70,
+    max_depth=9
+)
+
+search_grid <- tibble(
+    index=1:20,
+    nrounds=sample(10:300, size=20, replace=TRUE),
+    max_depth=sample(2:8, size=20, replace=TRUE)
+)
+search_grid
+
+library(purrr)
+
+param_tuner <- search_grid %>% 
+    tidyr::nest(-index) %>% 
+    mutate(
+        Model=map(
+            data,
+            ~ xgb.train(
+                data=xg_train,
+                nrounds=.x$nrounds,
+                max_depth=.x$max_depth,
+                watchlist=list(
+                    train=xg_train,
+                    validate=xg_val
+                ),
+                eval_metric='rmse'
+            )
+        )
+    )
+
+param_tuner
+param_tuner$Model[[1]]$evaluation_log
+
